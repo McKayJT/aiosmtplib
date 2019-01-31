@@ -222,7 +222,10 @@ class ESMTP(SMTPConnection):
             options = []
 
         options_bytes = [option.encode("ascii") for option in options]
-        from_string = b"FROM:" + quote_address(sender).encode("ascii")
+        if self.supports_extension("smtputf8"):
+            from_string = b"FROM:" + quote_address(sender).encode("utf8")
+        else:
+            from_string = b"FROM:" + quote_address(sender).encode("ascii")
 
         response = await self.execute_command(
             b"MAIL", from_string, *options_bytes, timeout=timeout
@@ -250,7 +253,10 @@ class ESMTP(SMTPConnection):
             options = []
 
         options_bytes = [option.encode("ascii") for option in options]
-        to = b"TO:" + quote_address(recipient).encode("ascii")
+        if self.supports_extension("smtputf8"):
+            to = b"TO:" + quote_address(recipient).encode("utf8")
+        else:
+            to = b"TO:" + quote_address(recipient).encode("ascii")
 
         response = await self.execute_command(
             b"RCPT", to, *options_bytes, timeout=timeout
